@@ -38,6 +38,9 @@ abstract class BaseMojo
     @Parameter(name = "overWrite", defaultValue = "false")
     protected boolean overWrite = false;
 
+    @Parameter(name = "lineBreak", defaultValue = "1500")
+    protected int lineBreak;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {

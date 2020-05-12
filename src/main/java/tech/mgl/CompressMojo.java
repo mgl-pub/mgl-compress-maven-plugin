@@ -1,6 +1,8 @@
 package tech.mgl;
 
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
+import com.yahoo.platform.yui.compressor.CssCompressor;
+import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,34 +12,96 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.IOUtil;
+import org.mozilla.javascript.ErrorReporter;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author mgl.tech
  * @date 2020-05
  */
-@Mojo(name = "compress",defaultPhase = LifecyclePhase.PROCESS_SOURCES)
+@Mojo(name = "compress", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class CompressMojo
         extends BaseMojo {
-
     private HtmlCompressor htmlCompressor;
+    private List<String> listIncludes = new ArrayList<>(0);
+
+    private void processIncludes() throws Exception {
+        for (String filePath : listIncludes) {
+            File file = new File(filePath);
+
+            StringBuffer newPath = new StringBuffer(0);
+            newPath.append(file.getParent()).append("/");
+
+            newPath.append(FileUtils.basename(file.getName()));
+            newPath.append("min.");
+            newPath.append(FileUtils.extension(file.getName()));
+
+            getLog().info(filePath.concat("................"));
+            switch (FileUtils.extension(file.getName()).toLowerCase()) {
+                case "js": {
+                    Reader reader = new FileReader(file);
+                    JavaScriptCompressor jsCompressor = new JavaScriptCompressor(reader, new MGLErrorReport());
+                    File writeFile = new File(newPath.toString().concat(".t"));
+                    Writer writer = new FileWriter(writeFile);
+                    jsCompressor.compress(writer, lineBreak, false, false, false, false);
+                    reader.close();
+                    writer.flush();
+                    writer.close();
+
+                    if (overWrite) {
+                        file.delete();
+                        Files.copy(writeFile.toPath(), new File(filePath).toPath());
+                        writeFile.delete();
+                    }
+                    break;
+                }
+                case "css": {
+                    Reader reader = new FileReader(file);
+                    CssCompressor cssCompressor = new CssCompressor(reader);
+                    File writeFile = new File(newPath.toString().concat(".t"));
+                    Writer writer = new FileWriter(writeFile);
+                    cssCompressor.compress(writer, lineBreak);
+                    reader.close();
+                    writer.flush();
+                    writer.close();
+
+
+                    if (overWrite) {
+                        file.delete();
+                        Files.copy(writeFile.toPath(), new File(filePath).toPath());
+                        writeFile.delete();
+                    }
+                    break;
+                }
+                case "html": {
+                    String content = Files.readString(file.toPath());
+                    if (StringUtils.isBlank(content)) {
+                        return;
+                    }
+
+                    String compressContent = htmlCompressor.compress(content);
+                    if (overWrite) {
+                        if (!file.canWrite()) {
+                            file.setWritable(true);
+                        }
+                        Files.writeString(file.toPath(), compressContent);
+                    } else {
+                        File compressFile = new File(newPath.toString());
+                        Files.writeString(compressFile.toPath(), compressContent);
+                    }
+                    break;
+                }
+            }
+            getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
+        }
+    }
 
     private void intoDir(File file) throws IOException {
-        if (null == htmlCompressor) {
-            htmlCompressor = new HtmlCompressor();
-            htmlCompressor.setCompressCss(true);
-            htmlCompressor.setCompressJavaScript(true);
-            htmlCompressor.setRemoveComments(true);
-            htmlCompressor.setRemoveIntertagSpaces(true);
-            htmlCompressor.setRemoveMultiSpaces(true);
-            htmlCompressor.setRemoveComments(true);
-        }
-
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (File f : files) {
@@ -46,47 +110,24 @@ public class CompressMojo
         }
 
         try {
-            if (file.isFile()) {
-                if (!file.getAbsolutePath().contains("/static/") && !file.getAbsolutePath().contains("\\static\\")) {
-                    return;
-                }
-
-                if (file.getName().endsWith(".js") || file.getName().endsWith(".css") || file.getName().endsWith(".html")) {
-                    String content = Files.readString(file.toPath());
-                    if (StringUtils.isBlank(content)) {
-                        return;
-                    }
-
-                    if (StringUtils.isBlank(file.getName()) || file.getName().length() == 0)
-                        return;
-
-                    String compressContent = htmlCompressor.compress(content);
-                    if (overWrite) {
-                        if (!file.canWrite()) {
-                            file.setWritable(true);
-                        }
-                        Files.writeString(file.toPath(), compressContent);
-                        log.info("Compress File ", file.getName(), " Successfully !");
-                        getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
-                        return;
-                    }
-
-                    StringBuffer newPath = new StringBuffer(0);
-                    newPath.append(file.getParent()).append("/");
-
-                    newPath.append(FileUtils.basename(file.getName()));
-                    newPath.append("min.");
-                    newPath.append(FileUtils.extension(file.getName()));
-                    File compressFile = new File(newPath.toString());
-                    Files.writeString(compressFile.toPath(), compressContent);
-                    log.info("Compress File ", file.getName(), " Successfully !");
-                    getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
-                }
+            if (null == file || !file.isFile()) {
+                return;
             }
+
+            if (!file.getAbsolutePath().contains("/static/") && !file.getAbsolutePath().contains("\\static\\")) {
+                return;
+            }
+
+            if (StringUtils.isBlank(file.getName()) || file.getName().length() == 0)
+                return;
+
+            if ("js".equalsIgnoreCase(FileUtils.extension(file.getName())) || "css".equalsIgnoreCase(FileUtils.extension(file.getName())) || "html".equalsIgnoreCase(FileUtils.extension(file.getName()))) {
+                listIncludes.add(file.getAbsolutePath());
+            }
+
         } catch (Exception e) {
             getLog().error("Error File : ".concat(file.getAbsolutePath()));
-            log.error("Error File : " , file.getAbsolutePath());
-            log.error(e.getMessage(),e);
+            log.error(e.getMessage(), e);
         }
 
     }
@@ -100,9 +141,21 @@ public class CompressMojo
         }
 
         try {
+            //init
+            if (null == htmlCompressor) {
+                htmlCompressor = new HtmlCompressor();
+                htmlCompressor.setCompressCss(true);
+                htmlCompressor.setCompressJavaScript(true);
+                htmlCompressor.setRemoveComments(true);
+                htmlCompressor.setRemoveIntertagSpaces(true);
+                htmlCompressor.setRemoveMultiSpaces(true);
+                htmlCompressor.setRemoveComments(true);
+            }
             intoDir(outputDirectory);
+
+            processIncludes();
         } catch (IOException e) {
-            throw new MojoExecutionException("Error " , e);
+            throw new MojoExecutionException("Error ", e);
         }
     }
 }
