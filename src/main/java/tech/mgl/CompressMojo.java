@@ -1,5 +1,7 @@
 package tech.mgl;
 
+import com.google.javascript.jscomp.CompilerOptions;
+import com.googlecode.htmlcompressor.compressor.ClosureJavaScriptCompressor;
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
@@ -14,9 +16,13 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 import org.mozilla.javascript.ErrorReporter;
+import tech.mgl.closure.compiler.CompressJs;
 
 import java.io.*;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,9 +32,9 @@ import java.util.List;
  */
 @Mojo(name = "compress", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class CompressMojo
-        extends BaseMojo {
+        extends CompressJs {
     private HtmlCompressor htmlCompressor;
-    private List<String> listIncludes = new ArrayList<>(0);
+    private final List<String> listIncludes = new ArrayList<>(0);
 
     private void processIncludes() throws Exception {
         for (String filePath : listIncludes) {
@@ -44,15 +50,16 @@ public class CompressMojo
             getLog().info(filePath.concat("................"));
             switch (FileUtils.extension(file.getName()).toLowerCase()) {
                 case "js": {
-                    Reader reader = new FileReader(file);
-                    JavaScriptCompressor jsCompressor = new JavaScriptCompressor(reader, new MGLErrorReport());
+                    /*Reader reader = new FileReader(file);
+                    JavaScriptCompressor jsCompressor = new JavaScriptCompressor(reader, new MGLErrorReport());*/
                     File writeFile = new File(newPath.toString().concat(".t"));
-                    Writer writer = new FileWriter(writeFile);
+                    /*Writer writer = new FileWriter(writeFile);
                     jsCompressor.compress(writer, lineBreak, false, false, false, false);
                     reader.close();
                     writer.flush();
-                    writer.close();
-
+                    writer.close();*/
+                    String comCnt = compressJS(Files.readString(file.toPath()));
+                    Files.writeString(writeFile.toPath(), comCnt);
                     if (overWrite) {
                         file.delete();
                         Files.copy(writeFile.toPath(), new File(filePath).toPath());
@@ -70,7 +77,6 @@ public class CompressMojo
                     writer.flush();
                     writer.close();
 
-
                     if (overWrite) {
                         file.delete();
                         Files.copy(writeFile.toPath(), new File(filePath).toPath());
@@ -83,7 +89,6 @@ public class CompressMojo
                     if (StringUtils.isBlank(content)) {
                         return;
                     }
-
                     String compressContent = htmlCompressor.compress(content);
                     if (overWrite) {
                         if (!file.canWrite()) {
@@ -121,10 +126,42 @@ public class CompressMojo
             if (StringUtils.isBlank(file.getName()) || file.getName().length() == 0)
                 return;
 
-            if ("js".equalsIgnoreCase(FileUtils.extension(file.getName())) || "css".equalsIgnoreCase(FileUtils.extension(file.getName())) || "html".equalsIgnoreCase(FileUtils.extension(file.getName()))) {
-                listIncludes.add(file.getAbsolutePath());
+            /**
+             * 只支持 js css html文件的压缩, 并且跳过已压缩 .min.命名的文件
+             */
+            if (!"js".equalsIgnoreCase(FileUtils.extension(file.getName()))
+                    && !"css".equalsIgnoreCase(FileUtils.extension(file.getName()))
+                    && !"html".equalsIgnoreCase(FileUtils.extension(file.getName()))) {
+
+                return;
             }
 
+            if (file.getName().equalsIgnoreCase(".min.")) {
+                return;
+            }
+
+            boolean pass = false;
+            if (null != includes && includes.length > 0) {
+                for (String include : includes) {
+                    pass = checkStr(file.getAbsolutePath(), include);
+                    if (pass) {
+                        break;
+                    }
+                }
+            }
+
+            if (null != excludes && excludes.length > 0) {
+                for (String exclude : excludes) {
+                    pass = !checkStr(file.getAbsolutePath(), exclude);
+                    if (pass) {
+                        break;
+                    }
+                }
+            }
+
+            if (pass) {
+                listIncludes.add(file.getAbsolutePath());
+            }
         } catch (Exception e) {
             getLog().error("Error File : ".concat(file.getAbsolutePath()));
             log.error(e.getMessage(), e);
@@ -152,7 +189,6 @@ public class CompressMojo
                 htmlCompressor.setRemoveComments(true);
             }
             intoDir(outputDirectory);
-
             processIncludes();
         } catch (IOException e) {
             throw new MojoExecutionException("Error ", e);
