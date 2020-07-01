@@ -110,6 +110,7 @@ public class CompressMojo
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (File f : files) {
+                getLog().info("DEBUG:".concat(f.getName()));
                 intoDir(f);
             }
         }
@@ -150,10 +151,11 @@ public class CompressMojo
                 }
             }
 
-            if (null != excludes && excludes.length > 0) {
+            if (pass && null != excludes && excludes.length > 0) {
                 for (String exclude : excludes) {
                     pass = !checkStr(file.getAbsolutePath(), exclude);
-                    if (pass) {
+                    System.out.println(pass);
+                    if (!pass) {
                         break;
                     }
                 }
@@ -171,7 +173,7 @@ public class CompressMojo
 
     @Override
     protected void process() throws Exception {
-        getLog().info("run mgl-compress ... ");
+        getLog().info("Running mgl-compress ... ");
         File f = outputDirectory;
         if (!f.exists()) {
             f.mkdirs();
