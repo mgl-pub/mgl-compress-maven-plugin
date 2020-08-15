@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import static com.google.javascript.jscomp.AbstractCommandLineRunner.getBuiltinExterns;
 import static com.google.javascript.jscomp.CommandLineRunner.getDefaultExterns;
 
 /**
@@ -29,13 +30,14 @@ public abstract class CompressJs extends BaseMojo {
         compiler.setLoggingLevel(Level.SEVERE);
         StringWriter writer = new StringWriter();
         try {
-            List<SourceFile> externsList = getDefaultExterns();
+            List<SourceFile> externList = getBuiltinExterns(CompilerOptions.Environment.BROWSER);
+            //List<SourceFile> externsList = getDefaultExterns();
             List<SourceFile> input = new ArrayList<>();
             input.add(SourceFile.fromCode("source.js", source));
             /*externsList.forEach(sourceFile -> {
                 System.out.println(sourceFile.getName());
             });*/
-            Result result = compiler.compile(externsList, input, compilerOptions);
+            Result result = compiler.compile(externList, input, compilerOptions);
             if (result.success) {
                 writer.write(compiler.toSource());
             } else {
