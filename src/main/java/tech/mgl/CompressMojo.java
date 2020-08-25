@@ -28,7 +28,7 @@ public class CompressMojo
         for (String filePath : listIncludes) {
             File file = new File(filePath);
 
-            StringBuffer newPath = new StringBuffer(0);
+            StringBuilder newPath = new StringBuilder(0);
             newPath.append(file.getParent()).append("/");
 
             newPath.append(FileUtils.basename(file.getName()));
@@ -104,7 +104,7 @@ public class CompressMojo
         }
 
         try {
-            if (null == file || !file.isFile()) {
+            if (!file.isFile()) {
                 return;
             }
 

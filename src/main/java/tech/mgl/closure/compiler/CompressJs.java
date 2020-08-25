@@ -27,7 +27,7 @@ public abstract class CompressJs extends BaseMojo {
         compilerOptions.setEmitUseStrict(false);
         compilationLevel.setOptionsForCompilationLevel(compilerOptions);
         compiler.disableThreads();
-        compiler.setLoggingLevel(Level.SEVERE);
+        Compiler.setLoggingLevel(Level.SEVERE);
         StringWriter writer = new StringWriter();
         try {
             List<SourceFile> externList = getBuiltinExterns(CompilerOptions.Environment.BROWSER);
