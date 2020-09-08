@@ -60,6 +60,9 @@ public abstract class BaseMojo
     @Parameter(name = "lineBreak", defaultValue = "1500")
     protected int lineBreak;
 
+    @Parameter(name = "continueWhenError", defaultValue = "true")
+    protected boolean continueWhenError = true;
+
     protected String[] getDefaultIncludes() throws Exception {
         return new String[]{"**/*.css", "**/*.js"};
     }

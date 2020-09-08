@@ -26,71 +26,79 @@ public class CompressMojo
 
     private void processIncludes() throws Exception {
         for (String filePath : listIncludes) {
-            File file = new File(filePath);
+            try {
+                File file = new File(filePath);
+                StringBuilder newPath = new StringBuilder(0);
+                newPath.append(file.getParent()).append("/");
 
-            StringBuilder newPath = new StringBuilder(0);
-            newPath.append(file.getParent()).append("/");
+                newPath.append(FileUtils.basename(file.getName()));
+                newPath.append("min.");
+                newPath.append(FileUtils.extension(file.getName()));
 
-            newPath.append(FileUtils.basename(file.getName()));
-            newPath.append("min.");
-            newPath.append(FileUtils.extension(file.getName()));
-
-            getLog().info(filePath.concat("................"));
-            switch (FileUtils.extension(file.getName()).toLowerCase()) {
-                case "js": {
+                getLog().info(filePath.concat("................"));
+                File writeFile = new File(newPath.toString().concat(".t"));
+                switch (FileUtils.extension(file.getName()).toLowerCase()) {
+                    case "js": {
                     /*Reader reader = new FileReader(file);
                     JavaScriptCompressor jsCompressor = new JavaScriptCompressor(reader, new MGLErrorReport());*/
-                    File writeFile = new File(newPath.toString().concat(".t"));
+
                     /*Writer writer = new FileWriter(writeFile);
                     jsCompressor.compress(writer, lineBreak, false, false, false, false);
                     reader.close();
                     writer.flush();
                     writer.close();*/
-                    String comCnt = compressJS(Files.readString(file.toPath()));
-                    Files.writeString(writeFile.toPath(), comCnt);
-                    if (overWrite) {
-                        file.delete();
-                        Files.copy(writeFile.toPath(), new File(filePath).toPath());
-                        writeFile.delete();
-                    }
-                    break;
-                }
-                case "css": {
-                    Reader reader = new FileReader(file);
-                    CssCompressor cssCompressor = new CssCompressor(reader);
-                    File writeFile = new File(newPath.toString().concat(".t"));
-                    Writer writer = new FileWriter(writeFile);
-                    cssCompressor.compress(writer, lineBreak);
-                    reader.close();
-                    writer.flush();
-                    writer.close();
-
-                    if (overWrite) {
-                        file.delete();
-                        Files.copy(writeFile.toPath(), new File(filePath).toPath());
-                        writeFile.delete();
-                    }
-                    break;
-                }
-                case "html": {
-                    String content = Files.readString(file.toPath());
-                    if (StringUtils.isBlank(content)) {
-                        return;
-                    }
-                    String compressContent = htmlCompressor.compress(content);
-                    if (overWrite) {
-                        if (!file.canWrite()) {
-                            file.setWritable(true);
+                        String comCnt = compressJS(Files.readString(file.toPath()));
+                        Files.writeString(writeFile.toPath(), comCnt);
+                        if (overWrite) {
+                            file.delete();
+                            Files.copy(writeFile.toPath(), new File(filePath).toPath());
+                            writeFile.delete();
                         }
-                        Files.writeString(file.toPath(), compressContent);
-                    } else {
-                        File compressFile = new File(newPath.toString());
-                        Files.writeString(compressFile.toPath(), compressContent);
+                        break;
                     }
-                    break;
+                    case "css": {
+                        Reader reader = new FileReader(file);
+                        CssCompressor cssCompressor = new CssCompressor(reader);
+                        //File writeFile = new File(newPath.toString().concat(".t"));
+                        Writer writer = new FileWriter(writeFile);
+                        cssCompressor.compress(writer, lineBreak);
+                        reader.close();
+                        writer.flush();
+                        writer.close();
+
+                        if (overWrite) {
+                            file.delete();
+                            Files.copy(writeFile.toPath(), new File(filePath).toPath());
+                            writeFile.delete();
+                        }
+                        break;
+                    }
+                    case "html": {
+                        String content = Files.readString(file.toPath());
+                        if (StringUtils.isBlank(content)) {
+                            return;
+                        }
+                        String compressContent = htmlCompressor.compress(content);
+                        if (overWrite) {
+                            if (!file.canWrite()) {
+                                file.setWritable(true);
+                            }
+                            Files.writeString(file.toPath(), compressContent);
+                        } else {
+                            File compressFile = new File(newPath.toString());
+                            Files.writeString(compressFile.toPath(), compressContent);
+                        }
+                        break;
+                    }
+                }
+                getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
+            } catch (Exception e) {
+                getLog().error(e.getMessage(), e);
+                //遇错跳出压缩
+                if (!continueWhenError) {
+                    throw new Exception(e);
                 }
             }
-            getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
         }
     }
 
