@@ -74,6 +74,22 @@ public class CompressMojo
                         break;
                     }
                     case "html": {
+                        /*var rep = /\n+/g;
+                        var repone = /<!--.*?-->/ig;
+                        var reptwo = /\/\*.*?\*\//ig;
+                        var reptree = /[ ]+</ig;
+                        var sourceZero = source.replace(rep,"");
+                        var sourceOne = sourceZero.replace(repone,"");
+                        var sourceTwo = sourceOne.replace(reptwo,"");
+                        var sourceTree = sourceTwo.replace(reptree,"<");
+                        $("#result").val(sourceTree);
+                        var resultLength = sourceTwo.length;
+                        var range = 100-(resultLength/sourceLength*100);
+                        $("#old").text(sourceLength);
+                        $("#new").text(resultLength);
+                        $("#range").text(range.toFixed(2));*/
+
+
                         String content = Files.readString(file.toPath());
                         if (StringUtils.isBlank(content)) {
                             return;
