@@ -10,9 +10,15 @@ import org.codehaus.plexus.util.FileUtils;
 import tech.mgl.closure.compiler.CompressJs;
 
 import java.io.*;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author mgl.tech
@@ -74,7 +80,42 @@ public class CompressMojo
                         break;
                     }
                     case "html": {
-                        /*var rep = /\n+/g;
+                        try {
+                            String content = Files.readString(file.toPath());
+                            if (StringUtils.isBlank(content)) {
+                                return;
+                            }
+                            String compressContent = htmlCompressor.compress(content);
+                            if (overWrite) {
+                                if (!file.canWrite()) {
+                                    file.setWritable(true);
+                                }
+                                Files.writeString(file.toPath(), compressJSForInHTML(compressContent));
+                            } else {
+                                File compressFile = new File(newPath.toString());
+                                Files.writeString(compressFile.toPath(), compressJSForInHTML(compressContent));
+                            }
+                        } catch (Exception eh) {
+                            getLog().error(eh.getMessage(), eh);
+                            runWhenOnErrorHtml(file, newPath.toString());
+                        }
+                        break;
+                    }
+                }
+                getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
+            } catch (Exception e) {
+                getLog().error(e.getMessage(), e);
+                //遇错跳出压缩
+                if (!continueWhenError) {
+                    throw new Exception(e);
+                }
+            }
+        }
+    }
+
+    private void runWhenOnErrorHtml(File file, String newPath) {
+        try {
+            /*var rep = /\n+/g;
                         var repone = /<!--.*?-->/ig;
                         var reptwo = /\/\*.*?\*\//ig;
                         var reptree = /[ ]+</ig;
@@ -89,33 +130,163 @@ public class CompressMojo
                         $("#new").text(resultLength);
                         $("#range").text(range.toFixed(2));*/
 
+            String rep = "\n";
+            String repone = "\\<!--.*?-->";
+            String reptwo = "\\*.*?\\*";
+            String reptree = "\\[ ]+<";
 
-                        String content = Files.readString(file.toPath());
-                        if (StringUtils.isBlank(content)) {
-                            return;
-                        }
-                        String compressContent = htmlCompressor.compress(content);
-                        if (overWrite) {
-                            if (!file.canWrite()) {
-                                file.setWritable(true);
-                            }
-                            Files.writeString(file.toPath(), compressContent);
-                        } else {
-                            File compressFile = new File(newPath.toString());
-                            Files.writeString(compressFile.toPath(), compressContent);
-                        }
-                        break;
-                    }
-                }
-                getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
-            } catch (Exception e) {
-                getLog().error(e.getMessage(), e);
-                //遇错跳出压缩
-                if (!continueWhenError) {
-                    throw new Exception(e);
-                }
+            String content = Files.readString(file.toPath());
+            if (StringUtils.isBlank(content)) {
+                return;
             }
+
+            String compressContent = content.replaceAll(rep, "")
+                    .replaceAll(repone, "")
+                    .replaceAll(reptwo, "")
+                    .replaceAll(reptree, "<");
+/*
+                    String compressContent = htmlCompressor.compress(content);*/
+            if (overWrite) {
+                if (!file.canWrite()) {
+                    file.setWritable(true);
+                }
+                Files.writeString(file.toPath(), compressContent);
+            } else {
+                File compressFile = new File(newPath);
+                Files.writeString(compressFile.toPath(), compressContent);
+            }
+
+            getLog().info("Normal Compress(support es6) File ".concat(file.getName()).concat(" Successfully !"));
+        } catch (Exception e) {
+            getLog().error(e.getMessage(), e);
         }
+    }
+
+    /**
+     * 对含有中文的字符串进行Unicode编码
+     * \ue400 \u9fa5 Unicode表中的汉字的头和尾
+     */
+    public static String setUrlForChn(String url) throws Exception{
+        String regEx = "[\u4e00-\u9fa5]";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(url);
+        StringBuffer sb = new StringBuffer();
+        while(m.find()){
+            m.appendReplacement(sb, URLEncoder.encode(m.group(), "UTF-8"));
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * 单独压缩HTML内部JS内容 避免压缩ES6语法错误问题
+     *
+     * @param htmlStr
+     * @return
+     * @throws Exception
+     */
+    public String compressJSForInHTML(String htmlStr) throws Exception {
+       // System.out.println(htmlStr);
+        //String c = htmlStr;
+        String regEx_script = "<script[^>]*?>[\\s\\S]*?<\\/script>"; //定义script的正则表达式
+        String regEx_style = "<style[^>]*?>[\\s\\S]*?<\\/style>"; //定义style的正则表达式
+        String regEx_html = "<[^>]+>"; //定义HTML标签的正则表达式
+
+        Pattern p_script = Pattern.compile(regEx_script, Pattern.CASE_INSENSITIVE);
+        Matcher m_script = p_script.matcher(htmlStr);
+        //System.out.println(m_script.group(1).toString());
+        int i = 0;
+        StringBuilder sb = new StringBuilder(0);
+        String scriptStartTag = "<script[^>]*?>";
+        String scriptEndTag = "<\\/script>";
+        while (m_script.find()) {
+            String group = m_script.group();
+            String matchContent = group.replaceAll(scriptStartTag, "").replaceAll(scriptEndTag, "");
+            if (StringUtils.isBlank(matchContent)) {
+                continue;
+            }
+
+
+           // System.out.println(m_script.start());
+           // System.out.println(m_script.end());
+            String com = super.compressJS(matchContent);
+            String s = (getMatch(group,scriptStartTag).concat(com.replaceAll("\\$", "RDS_CHAR_DOLLAR")).concat(getMatch(group,scriptEndTag)));
+            //System.out.println(setUrlForChn(s));
+            //c = c.substring(0, m_script.start()).concat(com).concat(htmlStr.substring(m_script.end()));
+
+            //替换内容的反斜杠用特殊字符代替 替换完整之后在改回来 否则替换文字的自动把反斜杠删除 不知道为什么
+            m_script.appendReplacement(sb, getMatch(group,scriptStartTag).concat(com.replaceAll("\\$", "RDS_CHAR_DOLLAR").replaceAll("\\\\","BACK_SLASH")).concat(getMatch(group,scriptEndTag)));
+            //System.out.println(i);
+            //System.out.println(sb.toString());
+            //System.out.println("1:" + super.compressJS(matchContent));
+            i++;
+        }
+        //System.out.println(sb.toString());
+        m_script.appendTail(sb);
+        //System.out.println(sb);
+/*
+        htmlStr=m_script.replaceAll(""); //过滤
+
+        Pattern p_style=Pattern.compile(regEx_style,Pattern.CASE_INSENSITIVE);
+        Matcher m_style=p_style.matcher(htmlStr);
+        htmlStr=m_style.replaceAll(""); //过滤style标签
+
+        Pattern p_html=Pattern.compile(regEx_html,Pattern.CASE_INSENSITIVE);
+        Matcher m_html=p_html.matcher(htmlStr);
+        htmlStr=m_html.replaceAll(""); //过滤html标签*/
+
+
+       //return "";
+       return sb.toString().replaceAll("RDS_CHAR_DOLLAR","\\$").replaceAll("BACK_SLASH","\\\\"); //返回文本字符串
+    }
+
+    private String getMatch(String str,String pattern) {
+        Pattern r = Pattern.compile(pattern);
+        // 现在创建 matcher 对象
+        Matcher m = r.matcher(str);
+        if (m.find( )) {
+            getLog().info("Found value: " + m.group() );
+            /*System.out.println("Found value: " + m.group(1) );
+            System.out.println("Found value: " + m.group(2) );
+            System.out.println("Found value: " + m.group(3) );*/
+            return m.group();
+        } else {
+            getLog().error("NO MATCH");
+            //System.out.println("NO MATCH");
+        }
+        return "";
+    }
+
+    public static void main(String[] args) throws Exception {
+        /*HtmlCompressor compressor = new HtmlCompressor();
+        compressor.setEnabled(true);
+        compressor.setCompressCss(true);
+        compressor.setYuiJsPreserveAllSemiColons(true);
+        compressor.setYuiJsLineBreak(1);
+        compressor.setPreserveLineBreaks(false);
+        compressor.setRemoveIntertagSpaces(true);
+        compressor.setRemoveComments(true);
+        compressor.setRemoveMultiSpaces(true);*/
+
+        String rep = "\n";
+        /*String repone = "\\<!--.*?-->";*/
+       /* String reptwo = "\\*.*?\\*";
+        String reptree = "\\[ ]+<";*/
+
+        String content = Files.readString(Path.of("F:\\Dev\\SomeWorkspace\\inspection-new\\inspection-old\\target\\classes\\static\\efbaseinfo\\efInfoList.html"));
+        if (StringUtils.isBlank(content)) {
+            return;
+        }
+
+        System.out.println(new CompressMojo().compressJSForInHTML(content));
+
+        //System.out.println(compressor.compress(content));
+        String compressContent = content.replaceAll(rep, "")
+               /*  .replaceAll(repone, "")
+               .replaceAll(reptwo, "")
+                .replaceAll(reptree, "<")*/;
+
+        //System.out.println(compressContent);
     }
 
     private void intoDir(File file) throws IOException {
@@ -166,7 +337,7 @@ public class CompressMojo
             if (pass && null != excludes && excludes.length > 0) {
                 for (String exclude : excludes) {
                     pass = !checkStr(file.getAbsolutePath(), exclude);
-                    System.out.println(pass);
+                    //System.out.println(pass);
                     if (!pass) {
                         break;
                     }
@@ -194,13 +365,23 @@ public class CompressMojo
         try {
             //init
             if (null == htmlCompressor) {
+                //System.out.println("---------------------");
                 htmlCompressor = new HtmlCompressor();
+                htmlCompressor.setEnabled(true);
+                htmlCompressor.setCompressCss(true);
+                htmlCompressor.setYuiJsPreserveAllSemiColons(true);
+                htmlCompressor.setYuiJsLineBreak(1);
+                htmlCompressor.setPreserveLineBreaks(false);
+                htmlCompressor.setRemoveIntertagSpaces(true);
+                htmlCompressor.setRemoveComments(true);
+                htmlCompressor.setRemoveMultiSpaces(true);
+                /*htmlCompressor = new HtmlCompressor();
                 htmlCompressor.setCompressCss(true);
                 htmlCompressor.setCompressJavaScript(true);
                 htmlCompressor.setRemoveComments(true);
                 htmlCompressor.setRemoveIntertagSpaces(true);
                 htmlCompressor.setRemoveMultiSpaces(true);
-                htmlCompressor.setRemoveComments(true);
+                htmlCompressor.setRemoveComments(true);*/
             }
             intoDir(outputDirectory);
             processIncludes();

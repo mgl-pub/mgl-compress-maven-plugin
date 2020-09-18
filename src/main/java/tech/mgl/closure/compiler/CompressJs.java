@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import static com.google.javascript.jscomp.AbstractCommandLineRunner.getBuiltinExterns;
-import static com.google.javascript.jscomp.CommandLineRunner.getDefaultExterns;
 
 /**
  * js 压缩支持类 基于cclosure compiler

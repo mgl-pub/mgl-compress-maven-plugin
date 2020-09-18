@@ -110,7 +110,7 @@ public abstract class BaseMojo
         return false;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, Exception {
         try {
             PathMatcher matcher = FileSystems.getDefault().getPathMatcher( "glob:".concat("**/sdfsdf.html"));
             boolean matches = matcher.matches(Paths.get("F:\\Dev\\MGL_OT\\mgl-vlg\\target\\classes\\static\\res\\web\\sdtor\\ext\\-emoji\\lib\\simditor-emoji.js"));
