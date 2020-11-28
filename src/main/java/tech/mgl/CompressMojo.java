@@ -10,9 +10,7 @@ import org.codehaus.plexus.util.FileUtils;
 import tech.mgl.closure.compiler.CompressJs;
 
 import java.io.*;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -41,7 +39,7 @@ public class CompressMojo
                 newPath.append("min.");
                 newPath.append(FileUtils.extension(file.getName()));
 
-                getLog().info(filePath.concat("................"));
+                //getLog().info(filePath.concat("................"));
                 File writeFile = new File(newPath.toString().concat(".t"));
                 switch (FileUtils.extension(file.getName()).toLowerCase()) {
                     case "js": {
@@ -102,7 +100,7 @@ public class CompressMojo
                         break;
                     }
                 }
-                getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
+                //getLog().info("Compress File ".concat(file.getName()).concat(" Successfully !"));
             } catch (Exception e) {
                 getLog().error(e.getMessage(), e);
                 //遇错跳出压缩
@@ -156,7 +154,7 @@ public class CompressMojo
                 Files.writeString(compressFile.toPath(), compressContent);
             }
 
-            getLog().info("Normal Compress(support es6) File ".concat(file.getName()).concat(" Successfully !"));
+            //getLog().info("Normal Compress(support es6) File ".concat(file.getName()).concat(" Successfully !"));
         } catch (Exception e) {
             getLog().error(e.getMessage(), e);
         }
@@ -240,18 +238,18 @@ public class CompressMojo
        return sb.toString().replaceAll("RDS_CHAR_DOLLAR","\\$").replaceAll("BACK_SLASH","\\\\"); //返回文本字符串
     }
 
-    private String getMatch(String str,String pattern) {
+    private static String getMatch(String str,String pattern) {
         Pattern r = Pattern.compile(pattern);
         // 现在创建 matcher 对象
         Matcher m = r.matcher(str);
         if (m.find( )) {
-            getLog().info("Found value: " + m.group() );
+            //getLog().info("Found value: " + m.group() );
             /*System.out.println("Found value: " + m.group(1) );
             System.out.println("Found value: " + m.group(2) );
             System.out.println("Found value: " + m.group(3) );*/
             return m.group();
         } else {
-            getLog().error("NO MATCH");
+            //getLog().error("NO MATCH");
             //System.out.println("NO MATCH");
         }
         return "";
@@ -278,7 +276,7 @@ public class CompressMojo
             return;
         }
 
-        System.out.println(new CompressMojo().compressJSForInHTML(content));
+        //System.out.println(new CompressMojo().compressJSForInHTML(content));
 
         //System.out.println(compressor.compress(content));
         String compressContent = content.replaceAll(rep, "")
@@ -287,13 +285,38 @@ public class CompressMojo
                 .replaceAll(reptree, "<")*/;
 
         //System.out.println(compressContent);
+
+
+
+
+
+
+        String regEx_script = "\\{[\\s\\S]*?}"; //定义script的正则表达式
+        Pattern p_script = Pattern.compile(regEx_script, Pattern.CASE_INSENSITIVE);
+        Matcher m_script = p_script.matcher("油中{元素[elements_h]，}{元素[elements]}；");
+        StringBuilder sb = new StringBuilder(0);
+        String scriptStartTag = "\\{";
+        String scriptEndTag = "}";
+        while (m_script.find()) {
+            String group = m_script.group();
+            String matchContent = group.replaceAll(scriptStartTag, "").replaceAll(scriptEndTag, "");
+            if (StringUtils.isBlank(matchContent)) {
+                continue;
+            }
+            String s = (getMatch(group,scriptStartTag).concat("替换的内容").concat(getMatch(group,scriptEndTag))).replaceAll("[{}]","");
+            System.out.println(s);
+            m_script.appendReplacement(sb,s);
+        }
+        m_script.appendTail(sb);
+        System.out.println(sb);
+
     }
 
     private void intoDir(File file) throws IOException {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (File f : files) {
-                getLog().info("DEBUG:".concat(f.getName()));
+                //getLog().info("DEBUG:".concat(f.getName()));
                 intoDir(f);
             }
         }
@@ -303,9 +326,10 @@ public class CompressMojo
                 return;
             }
 
-            if (!file.getAbsolutePath().contains("/static/") && !file.getAbsolutePath().contains("\\static\\")) {
+            //取消只对static目录有效 以便支持 Html后缀的 模板引擎
+            /*if (!file.getAbsolutePath().contains("/static/") && !file.getAbsolutePath().contains("\\static\\")) {
                 return;
-            }
+            }*/
 
             if (StringUtils.isBlank(file.getName()) || file.getName().length() == 0)
                 return;

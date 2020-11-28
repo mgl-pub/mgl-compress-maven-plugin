@@ -119,7 +119,7 @@
         <repository>
             <id>mgl_release_project</id>
             <name>Nexus Release Repository</name>
-            <url>https://maven.mgl.tech/repository/maven-releases/</url>
+            <url>https://maven.mgl.tech/repository/issue-release/</url>
         </repository>
         <snapshotRepository>
             <id>mgl_release_project_snapshots</id>
