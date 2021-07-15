@@ -1,13 +1,15 @@
 # mgl-compress-maven-plugin
 压缩spring boot static目录下的静态文件的 maven插件，只测试spring boot目录下static下的文件压缩
 
+### 2.0 是全新版本 逐渐使用kotlin重写代码
+
 1. maven plugins 模块加入如下即可使用
 
 ```maven
                 <plugin>
                     <groupId>tech.mgl</groupId>
                     <artifactId>mgl-compress-maven-plugin</artifactId>
-                    <version>1.0-RELEASE</version>
+                    <version>2.0-RELEASE</version>
                     <configuration>
                         <overWrite>true</overWrite>
                     </configuration>
