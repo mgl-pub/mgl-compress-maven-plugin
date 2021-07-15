@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * @author mgl.tech
  * @date 2020-05
  */
-@Mojo(name = "compress", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
+//@Mojo(name = "compress", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class CompressMojo
         extends CompressJs {
     private HtmlCompressor htmlCompressor;

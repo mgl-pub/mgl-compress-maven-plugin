@@ -20,6 +20,14 @@ public abstract class CompressJs extends BaseMojo {
     private final CompilerOptions compilerOptions = new CompilerOptions();
     //最简单的压缩不做任何改动 只是移除注释 清空空格 最安全的压缩了
     private final CompilationLevel compilationLevel = CompilationLevel.WHITESPACE_ONLY;
+
+
+    /**
+     * 压缩文件基础方法
+     * @param source
+     * @return
+     * @throws Exception
+     */
     protected String compressJS(String source) throws Exception {
         Compiler compiler = new Compiler();
         compilerOptions.setLineBreak(true);
