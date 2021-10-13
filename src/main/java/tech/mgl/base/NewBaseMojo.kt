@@ -62,17 +62,13 @@ abstract class NewBaseMojo: AbstractMojo() {
      */
     override fun execute() {
         try {
-            if (includes != null) {
-                getLog().info("includes:")
-                for (include in includes) {
-                    getLog().info(include)
-                }
+            getLog().info("includes:")
+            for (include in includes) {
+                getLog().info(include)
             }
-            if (excludes != null) {
-                getLog().info("excludes:")
-                for (exclude in excludes) {
-                    getLog().info(exclude)
-                }
+            getLog().info("excludes:")
+            for (exclude in excludes) {
+                getLog().info(exclude)
             }
         } catch (e: java.lang.Exception) {
             e.printStackTrace()

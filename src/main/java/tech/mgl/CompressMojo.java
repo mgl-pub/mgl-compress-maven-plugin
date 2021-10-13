@@ -4,19 +4,19 @@ import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
 import org.codehaus.plexus.util.FileUtils;
 import tech.mgl.closure.compiler.CompressJs;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import tech.mgl.base.CompressType;
 
 /**
  * @author mgl.tech
@@ -41,8 +41,9 @@ public class CompressMojo
 
                 //getLog().info(filePath.concat("................"));
                 File writeFile = new File(newPath.toString().concat(".t"));
-                switch (FileUtils.extension(file.getName()).toLowerCase()) {
-                    case "js": {
+
+                switch (CompressType.valueOf(FileUtils.extension(file.getName()).toLowerCase())) {
+                    case JS: {
                     /*Reader reader = new FileReader(file);
                     JavaScriptCompressor jsCompressor = new JavaScriptCompressor(reader, new MGLErrorReport());*/
 
@@ -60,7 +61,7 @@ public class CompressMojo
                         }
                         break;
                     }
-                    case "css": {
+                    case CSS: {
                         Reader reader = new FileReader(file);
                         CssCompressor cssCompressor = new CssCompressor(reader);
                         //File writeFile = new File(newPath.toString().concat(".t"));
@@ -77,7 +78,7 @@ public class CompressMojo
                         }
                         break;
                     }
-                    case "html": {
+                    case HTML: {
                         try {
                             String content = Files.readString(file.toPath());
                             if (StringUtils.isBlank(content)) {
@@ -170,7 +171,7 @@ public class CompressMojo
         Matcher m = p.matcher(url);
         StringBuffer sb = new StringBuffer();
         while(m.find()){
-            m.appendReplacement(sb, URLEncoder.encode(m.group(), "UTF-8"));
+            m.appendReplacement(sb, URLEncoder.encode(m.group(), StandardCharsets.UTF_8));
         }
         m.appendTail(sb);
         return sb.toString();
@@ -289,7 +290,7 @@ public class CompressMojo
 
 
 
-
+/*
 
         String regEx_script = "\\{[\\s\\S]*?}"; //定义script的正则表达式
         Pattern p_script = Pattern.compile(regEx_script, Pattern.CASE_INSENSITIVE);
@@ -308,13 +309,17 @@ public class CompressMojo
             m_script.appendReplacement(sb,s);
         }
         m_script.appendTail(sb);
-        System.out.println(sb);
+        System.out.println(sb);*/
+
+
+        System.out.println(CompressType.CSS.getT());
 
     }
 
     private void intoDir(File file) throws IOException {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
+            assert files != null;
             for (File f : files) {
                 //getLog().info("DEBUG:".concat(f.getName()));
                 intoDir(f);
@@ -337,9 +342,9 @@ public class CompressMojo
             /**
              * 只支持 js css html文件的压缩, 并且跳过已压缩 .min.命名的文件
              */
-            if (!"js".equalsIgnoreCase(FileUtils.extension(file.getName()))
-                    && !"css".equalsIgnoreCase(FileUtils.extension(file.getName()))
-                    && !"html".equalsIgnoreCase(FileUtils.extension(file.getName()))) {
+            if (!CompressType.JS.getT().equalsIgnoreCase(FileUtils.extension(file.getName()))
+                    && !CompressType.CSS.getT().equalsIgnoreCase(FileUtils.extension(file.getName()))
+                    && !CompressType.HTML.getT().equalsIgnoreCase(FileUtils.extension(file.getName()))) {
 
                 return;
             }
