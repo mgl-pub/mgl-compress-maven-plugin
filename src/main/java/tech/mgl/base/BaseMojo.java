@@ -39,6 +39,9 @@ public abstract class BaseMojo
     @Parameter(defaultValue = "UTF-8")
     private String encoding;
 
+    @Parameter(defaultValue = "UTF-8")
+    private String saveLog;
+
     @Parameter(defaultValue = "false")
     private boolean preserveAllSemiColons;
 
