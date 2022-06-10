@@ -1,13 +1,13 @@
 package tech.mgl.base
 
-import org.apache.logging.log4j.LogManager
+import lombok.extern.slf4j.Slf4j
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugins.annotations.Parameter
 import java.io.File
 
+@Slf4j
 abstract class NewBaseMojo: AbstractMojo() {
 
-    protected var log = LogManager.getLogger(this.javaClass)
 
     @Parameter(defaultValue = "\${project.basedir}")
     protected var baseDir: File? = null

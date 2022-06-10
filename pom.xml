@@ -4,13 +4,13 @@
     <groupId>tech.mgl</groupId>
     <artifactId>mgl-compress-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>2.0-RELEASE</version>
+    <version>3.0</version>
     <name>mgl-compress-maven-plugin Maven Mojo</name>
 
     <licenses>
         <license>
-            <name>仅本人使用，不用于任何第三方应用</name>
-            <url>www.mgl.tech</url>
+            <name>MIT</name>
+            <url>https://mgl.tech</url>
             <distribution>repo</distribution>
             <comments>person license</comments>
         </license>
@@ -22,12 +22,6 @@
         <developerConnection>https://mgl.tech/p/mgl-base</developerConnection>
     </scm>
     <description>
-        THIS FILE IS PART OF MGL PROJECT MGL.ONE
-        - The core part of the reboot library （文件名和作用概述）
-        Copyright (c) 1989-2016 MGL.ONE
-        Copyright (c) 2016 MGL.TECH
-        任何网站未经本公司授权，不得盗用本站所有资源及所有代码否则追究法律责任
-        任何网站未经本公司授权，任何人不得作全部或部分复制或仿造否则追究法律责任
     </description>
 
     <developers>
@@ -73,16 +67,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.17.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.17.2</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler</artifactId>
             <version>v20220502</version>
@@ -94,9 +78,19 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
+            <artifactId>kotlin-test-junit</artifactId>
             <version>${kotlin.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.24</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.36</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
@@ -111,7 +105,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
         <maven.version>3.6.4</maven.version>
-        <kotlin.version>1.6.21</kotlin.version>
+        <kotlin.version>1.7.0</kotlin.version>
     </properties>
 
     <build>

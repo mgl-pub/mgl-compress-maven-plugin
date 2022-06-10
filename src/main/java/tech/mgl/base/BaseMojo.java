@@ -1,8 +1,7 @@
 package tech.mgl.base;
 
 import com.yahoo.platform.yui.compressor.CssCompressor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -17,9 +16,9 @@ import java.nio.file.Paths;
  * @author mgl.tech
  * @date 2020-05
  */
+@Slf4j
 public abstract class BaseMojo
         extends AbstractMojo {
-    protected Logger log = LogManager.getLogger(this.getClass());
 
     @Parameter(defaultValue = "${project.basedir}")
     protected File baseDir;
@@ -131,6 +130,7 @@ public abstract class BaseMojo
             reader.close();
             writer.flush();
             writer.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }

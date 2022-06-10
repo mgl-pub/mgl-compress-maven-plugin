@@ -1,12 +1,11 @@
 package tech.mgl.exception;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 
+@Slf4j
 public class MGLErrorReport implements ErrorReporter {
-    protected Logger log = LogManager.getLogger(this.getClass());
 
     @Override
     public void warning(String s, String s1, int i, String s2, int i1) {

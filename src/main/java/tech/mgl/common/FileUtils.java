@@ -16,9 +16,9 @@ public class FileUtils {
             if (f.isDirectory()) {
                 File[] fileArray = f.listFiles();
                 if (fileArray != null) {
-                    for (int i = 0; i < fileArray.length; i++) {
+                    for (File file : fileArray) {
                         // 递归调用
-                        scan(fileArray[i]);
+                        scan(file);
                     }
                 }
             } else {

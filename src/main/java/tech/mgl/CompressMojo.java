@@ -2,6 +2,7 @@ package tech.mgl;
 
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import com.yahoo.platform.yui.compressor.CssCompressor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.FileUtils;
@@ -22,6 +23,7 @@ import tech.mgl.base.CompressType;
  * @author mgl.tech
  * @date 2020-05
  */
+@Slf4j
 //@Mojo(name = "compress", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class CompressMojo
         extends CompressJs {

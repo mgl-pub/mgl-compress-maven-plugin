@@ -2,6 +2,7 @@ package tech.mgl
 
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor
 import com.yahoo.platform.yui.compressor.CssCompressor
+import lombok.extern.slf4j.Slf4j
 import org.apache.commons.lang3.StringUtils
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.LifecyclePhase
@@ -17,6 +18,7 @@ import java.util.regex.Pattern
  * @author hotpot
  * @date 2021.07
  */
+@Slf4j
 @Mojo(name = "compress", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 class CompressMojoKt: CompressJs() {
     private var htmlCompressor: HtmlCompressor? = null
