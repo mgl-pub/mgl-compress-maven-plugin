@@ -22,6 +22,7 @@
         <developerConnection>https://mgl.tech/p/mgl-base</developerConnection>
     </scm>
     <description>
+        压缩spring boot static目录下的静态文件的 maven插件，只测试spring boot目录下static下的文件压缩
     </description>
 
     <developers>
